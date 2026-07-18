@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RISC-V Pipeline Simulator</title>
+    <link rel="Stylesheet" href="style.css"
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="mark">RV32I</div>
+      <div class="brand-text">
+        <h1>Pipeline Simulator<span class="riscv-tag">RISC-V</span></h1>
+        <p>IF <span class="arrow">→</span> ID <span class="arrow">→</span> EX <span class="arrow">→</span> MEM <span class="arrow">→</span> WB &nbsp;·&nbsp; hazard detection &amp; forwarding</p>
+      </div>
+    </div>
+    <div class="badge-row">
+      <span class="badge">Computer Organization &amp; Assembly Language</span>
+      <span class="status-badge" id="statusBadge">Idle</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT MAIN COLUMN -->
+    <div>
+      <div class="card">
+        <h2><span class="left"><span class="dot"></span>Assembly Program</span></h2>
+        <div class="editor-frame">
+          <div class="editor-titlebar">
+            <span class="tdot"></span><span class="tdot"></span><span class="tdot"></span>
+            <span class="fname">program.s</span>
+          </div>
+          <textarea id="asmInput" spellcheck="false">add x5, x6, x7
+sub x8, x5, x9
+and x10, x8, x11
+or  x12, x6, x7
+add x13, x12, x5</textarea>
+        </div>
+        <div class="row">
+          <button class="primary" id="loadBtn">▶ Assemble &amp; Load</button>
+          <button class="ghost" id="resetBtn">⟲ Reset</button>
+          <div class="examples">
+            <label for="exampleSelect">EXAMPLE:</label>
+            <select id="exampleSelect">
+              <option value="">— choose —</option>
+              <option value="hazard">Data Hazard (RAW)</option>
+              <option value="loaduse">Load-Use Hazard</option>
+              <option value="nohazard">No Hazard</option>
+              <option value="branch">Branch (Control Hazard)</option>
+            </select>
+          </div>
+        </div>
+        <p class="help-note">
+          <code>add rd,rs1,rs2</code> <code>sub rd,rs1,rs2</code> <code>and/or/xor rd,rs1,rs2</code>
+          <code>addi rd,rs1,imm</code> <code>lw rd,offset(rs1)</code> <code>sw rs2,offset(rs1)</code>
+          <code>beq/bne rs1,rs2,label</code> — registers: <code>x0</code>–<code>x31</code> or ABI names (<code>a0</code>, <code>t0</code>, <code>s1</code>…)
+        </p>
+      </div>
+
+      <div class="card">
+        <h2><span class="left"><span class="dot"></span>Pipeline Execution</span></h2>
+        <div class="pipeline-scroll">
+          <table class="pipeline" id="pipelineTable">
+            <thead><tr id="pipelineHead"></tr></thead>
+            <tbody id="pipelineBody"></tbody>
+          </table>
+        </div>
+
+        <div class="legend">
+          <span><i style="background:linear-gradient(135deg,var(--if),#0099cc)"></i> IF — Fetch</span>
+          <span><i style="background:linear-gradient(135deg,var(--id),#7a6ae0)"></i> ID — Decode</span>
+          <span><i style="background:linear-gradient(135deg,var(--ex),#e08e2a)"></i> EX — Execute</span>
+          <span><i style="background:linear-gradient(135deg,var(--mem),#00b377)"></i> MEM — Memory</span>
+          <span><i style="background:linear-gradient(135deg,var(--wb),#d6489f)"></i> WB — Write Back</span>
+          <span><i style="background:repeating-linear-gradient(45deg,var(--control),var(--control) 4px,#1a1408 4px,#1a1408 8px)"></i> Stall Bubble</span>
+        </div>
+
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+        <div class="controls">
+          <button class="icon-btn" id="stepBackBtn" disabled title="Step back">⏮</button>
+          <button id="stepBtn" disabled>⏭ Step</button>
+          <button id="playBtn" disabled>▶ Auto Play</button>
+          <button id="pauseBtn" disabled>⏸ Pause</button>
+          <span class="cycle-readout" id="cycleReadout">Cycle 0 / 0</span>
+          <div class="spacer"></div>
+          <span class="speed-label">SPEED</span>
+          <input type="range" id="speedRange" min="300" max="1800" value="800" step="100">
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div>
+      <div class="card">
+        <h2><span class="left"><span class="dot"></span>Performance Metrics</span></h2>
+        <div class="stats-grid">
+          <div class="stat"><div class="num" id="statInstr">0</div><div class="lbl">Instructions</div></div>
+          <div class="stat"><div class="num" id="statCycles">0</div><div class="lbl">Cycles Elapsed</div></div>
+          <div class="stat"><div class="num" id="statStalls">0</div><div class="lbl">Stall Cycles</div></div>
+          <div class="stat"><div class="num" id="statCPI">0.00</div><div class="lbl">CPI</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="left"><span class="dot"></span>Hazard Log</span></h2>
+        <div class="log" id="hazardLog">
+          <div class="entry empty">No hazards detected yet — load a program to begin.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="left"><span class="dot"></span>Register File</span></h2>
+        <div class="reg-grid" id="regGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>5-Stage RISC-V Pipeline Simulator &nbsp;·&nbsp; built for <b>Computer Organization &amp; Assembly Language</b></footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
